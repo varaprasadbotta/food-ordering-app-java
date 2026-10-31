@@ -1,7 +1,7 @@
 package com.prasad.fooddelivery.customer.model;
 
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.UUID;
 
 public class Address {
@@ -21,8 +21,8 @@ public class Address {
 
     private boolean defaultAddress;
 
-    private final LocalDateTime createdAt;
-    private LocalDateTime updatedAt;
+    private final Instant createdAt;
+    private Instant updatedAt;
 
     public Address(
             UUID customerId,
@@ -70,8 +70,67 @@ public class Address {
 
         this.defaultAddress = false;
 
-        this.createdAt = LocalDateTime.now();
-        this.updatedAt = LocalDateTime.now();
+        this.createdAt = Instant.now();
+        this.updatedAt = Instant.now();
+    }
+
+    // Used only by restore() to rebuild an existing address
+    private Address(
+            UUID id,
+            UUID customerId,
+            AddressLabel label,
+            String houseNumber,
+            String street,
+            String landmark,
+            String city,
+            String state,
+            String postalCode,
+            BigDecimal latitude,
+            BigDecimal longitude,
+            boolean defaultAddress,
+            Instant createdAt,
+            Instant updatedAt
+    ) {
+        this.id = id;
+        this.customerId = customerId;
+        this.label = label;
+        this.houseNumber = houseNumber;
+        this.street = street;
+        this.landmark = landmark;
+        this.city = city;
+        this.state = state;
+        this.postalCode = postalCode;
+        this.latitude = latitude;
+        this.longitude = longitude;
+        this.defaultAddress = defaultAddress;
+        this.createdAt = createdAt;
+        this.updatedAt = updatedAt;
+    }
+
+    // Rebuilds an address that already exists (e.g. loaded from the database)
+    public static Address restore(
+            UUID id,
+            UUID customerId,
+            AddressLabel label,
+            String houseNumber,
+            String street,
+            String landmark,
+            String city,
+            String state,
+            String postalCode,
+            BigDecimal latitude,
+            BigDecimal longitude,
+            boolean defaultAddress,
+            Instant createdAt,
+            Instant updatedAt
+    ) {
+        if (id == null) {
+            throw new IllegalArgumentException("Address ID is required");
+        }
+
+        return new Address(id, customerId, label, houseNumber, street, landmark,
+                city, state, postalCode, latitude, longitude, defaultAddress,
+                createdAt, updatedAt);
     }
 
     // Update address details
@@ -112,19 +171,19 @@ public class Address {
         this.latitude = latitude;
         this.longitude = longitude;
 
-        this.updatedAt = LocalDateTime.now();
+        this.updatedAt = Instant.now();
     }
 
     // Mark this address as default
     public void setAsDefault() {
         this.defaultAddress = true;
-        this.updatedAt = LocalDateTime.now();
+        this.updatedAt = Instant.now();
     }
 
     // Remove default status
     public void removeAsDefault() {
         this.defaultAddress = false;
-        this.updatedAt = LocalDateTime.now();
+        this.updatedAt = Instant.now();
     }
 
     // Getters
@@ -176,11 +235,11 @@ public class Address {
         return defaultAddress;
     }
 
-    public LocalDateTime getCreatedAt() {
+    public Instant getCreatedAt() {
         return createdAt;
     }
 
-    public LocalDateTime getUpdatedAt() {
+    public Instant getUpdatedAt() {
         return updatedAt;
     }
 }

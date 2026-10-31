@@ -1,7 +1,7 @@
 package com.prasad.fooddelivery.order.model;
 
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.UUID;
 
 public class Order {
@@ -22,8 +22,8 @@ public class Order {
 
     private String specialInstructions;
 
-    private final LocalDateTime createdAt;
-    private LocalDateTime updatedAt;
+    private final Instant createdAt;
+    private Instant updatedAt;
 
     public Order(
             UUID customerId,
@@ -76,8 +76,72 @@ public class Order {
 
         this.specialInstructions = specialInstructions;
 
-        this.createdAt = LocalDateTime.now();
-        this.updatedAt = LocalDateTime.now();
+        this.createdAt = Instant.now();
+        this.updatedAt = Instant.now();
+    }
+
+    // Used only by restore() to rebuild an existing order
+    private Order(
+            UUID id,
+            UUID customerId,
+            UUID restaurantId,
+            UUID deliveryAddressId,
+            OrderStatus orderStatus,
+            PaymentStatus paymentStatus,
+            BigDecimal subtotal,
+            BigDecimal deliveryFee,
+            BigDecimal taxAmount,
+            BigDecimal discountAmount,
+            BigDecimal totalAmount,
+            String specialInstructions,
+            Instant createdAt,
+            Instant updatedAt
+    ) {
+        this.id = id;
+        this.customerId = customerId;
+        this.restaurantId = restaurantId;
+        this.deliveryAddressId = deliveryAddressId;
+        this.orderStatus = orderStatus;
+        this.paymentStatus = paymentStatus;
+        this.subtotal = subtotal;
+        this.deliveryFee = deliveryFee;
+        this.taxAmount = taxAmount;
+        this.discountAmount = discountAmount;
+        this.totalAmount = totalAmount;
+        this.specialInstructions = specialInstructions;
+        this.createdAt = createdAt;
+        this.updatedAt = updatedAt;
+    }
+
+    // Rebuilds an order that already exists (e.g. loaded from the database).
+    // The stored status and totals are kept as they are, not reset or recalculated.
+    public static Order restore(
+            UUID id,
+            UUID customerId,
+            UUID restaurantId,
+            UUID deliveryAddressId,
+            OrderStatus orderStatus,
+            PaymentStatus paymentStatus,
+            BigDecimal subtotal,
+            BigDecimal deliveryFee,
+            BigDecimal taxAmount,
+            BigDecimal discountAmount,
+            BigDecimal totalAmount,
+            String specialInstructions,
+            Instant createdAt,
+            Instant updatedAt
+    ) {
+        if (id == null) {
+            throw new IllegalArgumentException("Order ID is required");
+        }
+
+        if (orderStatus == null || paymentStatus == null) {
+            throw new IllegalArgumentException("Order and payment status are required");
+        }
+
+        return new Order(id, customerId, restaurantId, deliveryAddressId,
+                orderStatus, paymentStatus, subtotal, deliveryFee, taxAmount,
+                discountAmount, totalAmount, specialInstructions, createdAt, updatedAt);
     }
 
     private void validateAmount(BigDecimal amount, String fieldName) {
@@ -91,8 +155,14 @@ public class Order {
             throw new IllegalArgumentException("Order status is required");
         }
 
+        if (!this.orderStatus.canTransitionTo(orderStatus)) {
+            throw new IllegalStateException(
+                    "Cannot change order status from " + this.orderStatus + " to " + orderStatus
+            );
+        }
+
         this.orderStatus = orderStatus;
-        this.updatedAt = LocalDateTime.now();
+        this.updatedAt = Instant.now();
     }
 
     public void updatePaymentStatus(PaymentStatus paymentStatus) {
@@ -100,8 +170,14 @@ public class Order {
             throw new IllegalArgumentException("Payment status is required");
         }
 
+        if (!this.paymentStatus.canTransitionTo(paymentStatus)) {
+            throw new IllegalStateException(
+                    "Cannot change payment status from " + this.paymentStatus + " to " + paymentStatus
+            );
+        }
+
         this.paymentStatus = paymentStatus;
-        this.updatedAt = LocalDateTime.now();
+        this.updatedAt = Instant.now();
     }
 
     // Getters
@@ -154,11 +230,11 @@ public class Order {
         return specialInstructions;
     }
 
-    public LocalDateTime getCreatedAt() {
+    public Instant getCreatedAt() {
         return createdAt;
     }
 
-    public LocalDateTime getUpdatedAt() {
+    public Instant getUpdatedAt() {
         return updatedAt;
     }
 }

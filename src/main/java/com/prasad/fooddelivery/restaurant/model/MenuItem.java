@@ -1,13 +1,13 @@
 package com.prasad.fooddelivery.restaurant.model;
 
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.UUID;
 
 public class MenuItem {
 
-    private UUID id;
-    private UUID restaurantId;
+    private final UUID id;
+    private final UUID restaurantId;
 
     private String name;
     private String description;
@@ -22,8 +22,8 @@ public class MenuItem {
     private boolean available;
     private boolean recommended;
 
-    private LocalDateTime createdAt;
-    private LocalDateTime updatedAt;
+    private final Instant createdAt;
+    private Instant updatedAt;
 
     public MenuItem(
             UUID restaurantId,
@@ -66,8 +66,60 @@ public class MenuItem {
         this.available = true;
         this.recommended = false;
 
-        this.createdAt = LocalDateTime.now();
-        this.updatedAt = LocalDateTime.now();
+        this.createdAt = Instant.now();
+        this.updatedAt = Instant.now();
+    }
+
+    // Used only by restore() to rebuild an existing menu item
+    private MenuItem(
+            UUID id,
+            UUID restaurantId,
+            String name,
+            String description,
+            BigDecimal price,
+            MenuCategory category,
+            DietaryType dietaryType,
+            String imageUrl,
+            boolean available,
+            boolean recommended,
+            Instant createdAt,
+            Instant updatedAt
+    ) {
+        this.id = id;
+        this.restaurantId = restaurantId;
+        this.name = name;
+        this.description = description;
+        this.price = price;
+        this.category = category;
+        this.dietaryType = dietaryType;
+        this.imageUrl = imageUrl;
+        this.available = available;
+        this.recommended = recommended;
+        this.createdAt = createdAt;
+        this.updatedAt = updatedAt;
+    }
+
+    // Rebuilds a menu item that already exists (e.g. loaded from the database)
+    public static MenuItem restore(
+            UUID id,
+            UUID restaurantId,
+            String name,
+            String description,
+            BigDecimal price,
+            MenuCategory category,
+            DietaryType dietaryType,
+            String imageUrl,
+            boolean available,
+            boolean recommended,
+            Instant createdAt,
+            Instant updatedAt
+    ) {
+        if (id == null) {
+            throw new IllegalArgumentException("Menu item ID is required");
+        }
+
+        return new MenuItem(id, restaurantId, name, description, price, category,
+                dietaryType, imageUrl, available, recommended, createdAt, updatedAt);
     }
 
     public UUID getId() {
@@ -110,11 +162,11 @@ public class MenuItem {
         return recommended;
     }
 
-    public LocalDateTime getCreatedAt() {
+    public Instant getCreatedAt() {
         return createdAt;
     }
 
-    public LocalDateTime getUpdatedAt() {
+    public Instant getUpdatedAt() {
         return updatedAt;
     }
 
@@ -124,27 +176,27 @@ public class MenuItem {
         }
 
         this.price = newPrice;
-        this.updatedAt = LocalDateTime.now();
+        this.updatedAt = Instant.now();
     }
 
     public void markUnavailable() {
         this.available = false;
-        this.updatedAt = LocalDateTime.now();
+        this.updatedAt = Instant.now();
     }
 
     public void markAvailable() {
         this.available = true;
-        this.updatedAt = LocalDateTime.now();
+        this.updatedAt = Instant.now();
     }
 
     public void markAsRecommended() {
         this.recommended = true;
-        this.updatedAt = LocalDateTime.now();
+        this.updatedAt = Instant.now();
     }
 
     public void removeRecommendation() {
         this.recommended = false;
-        this.updatedAt = LocalDateTime.now();
+        this.updatedAt = Instant.now();
     }
 
 }
